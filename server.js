@@ -6,6 +6,8 @@ const transporter = nodemailer.createTransport({
     pass: 'ukqc bcbe upqa mmsy'
   }
 });
+const cors = require('cors');
+app.use(cors());
 require('dotenv').config();
 
 const express = require('express');
