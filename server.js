@@ -2,8 +2,8 @@ const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'pushpa17.pk@gmail.com',
-    pass: 'ukqc bcbe upqa mmsy'
+    user: process.env.EMAIL_USER,
+  pass: process.env.EMAIL_PASS
   }
 });
 const cors = require('cors');
