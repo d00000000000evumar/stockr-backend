@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/263/263142.png">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stockr — Inventory Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --purple:#534AB7; --purple-l:#EEEDFE; --purple-m:#AFA9EC; --purple-d:#3C3489;
+  --teal:#1D9E75; --teal-l:#E1F5EE;
+  --amber:#BA7517; --amber-l:#FAEEDA;
+  --red:#A32D2D; --red-l:#FCEBEB;
+  --green:#3B6D11; --green-l:#EAF3DE;
+  --bg:#F7F6FF; --card:#fff;
+  --border:rgba(83,74,183,.13); --border-h:rgba(83,74,183,.3);
+  --text:#1a1830; --muted:#6b6890;
+  --r:14px; --rs:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.layout{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:200px;background:var(--purple-d);padding:1.5rem 1rem;display:flex;flex-direction:column;gap:1.5rem;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-icon{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
+.brand-name{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.brand-tag{font-size:10px;color:rgba(255,255,255,.5);margin-top:1px}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--rs);font-size:13px;font-weight:500;color:rgba(255,255,255,.65);cursor:pointer;transition:background .15s,color .15s;border:none;background:transparent;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
+.nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.18);color:#fff}
+.sidebar-footer{margin-top:auto;font-size:11px;color:rgba(255,255,255,.3);line-height:1.6}
+
+/* MAIN */
+.main{flex:1;padding:1.5rem;overflow-y:auto;max-width:100%}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:10px;flex-wrap:wrap}
+.page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text)}
+.page-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.date-pill{display:flex;align-items:center;gap:5px;background:var(--purple-l);color:var(--purple);font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;transition:border-color .2s}
+.stat-card:hover{border-color:var(--border-h)}
+.stat-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.si-p{background:var(--purple-l)} .si-t{background:var(--teal-l)} .si-a{background:var(--amber-l)} .si-r{background:var(--red-l)}
+.stat-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:800}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* PANELS */
+.panels{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem}
+.panel-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:1rem;color:var(--text);display:flex;align-items:center;gap:7px}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.fld label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.fld input[type=text],.fld input[type=number]{width:100%;height:40px;border:1.5px solid var(--border);border-radius:var(--rs);padding:0 11px;font-size:14px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
+.fld input:focus{border-color:var(--purple-m);box-shadow:0 0 0 3px rgba(175,169,236,.2)}
+.upload-zone{display:flex;align-items:center;gap:8px;height:40px;border:1.5px dashed var(--purple-m);border-radius:var(--rs);padding:0 12px;color:var(--purple);font-size:13px;font-weight:500;cursor:pointer;background:var(--purple-l);transition:background .15s;flex:1}
+.upload-zone:hover{background:#CECBF6}
+.btn-add{height:40px;padding:0 18px;background:var(--purple);color:#fff;border:none;border-radius:var(--rs);font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s,transform .1s;white-space:nowrap;flex-shrink:0}
+.btn-add:hover{background:var(--purple-d)}
+.btn-add:active{transform:scale(.97)}
+
+/* ITEM CARDS */
+.items-list{display:flex;flex-direction:column;gap:9px}
+.icard{border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 13px;display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:12px;background:var(--bg);transition:border-color .2s;animation:fadeUp .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.icard:hover{border-color:var(--border-h)}
+.icard.low{border-left:3px solid #EF9F27}
+.icard.out{border-left:3px solid #E24B4A;opacity:.7}
+.thumb{width:56px;height:56px;border-radius:11px;object-fit:cover;border:1.5px solid var(--border);cursor:pointer;display:block}
+.thumb-ph{width:56px;height:56px;border-radius:11px;background:var(--purple-l);border:1.5px dashed var(--purple-m);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0}
+.thumb-ph:hover{background:#CECBF6}
+.iname{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px}
+.imeta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}
+.badge.ok{background:var(--green-l);color:var(--green)}
+.badge.low{background:var(--amber-l);color:var(--amber)}
+.badge.out{background:var(--red-l);color:var(--red)}
+.iright{display:flex;align-items:center;gap:10px}
+.qty-box{text-align:center;min-width:34px}
+.qty-lbl{font-size:10px;color:var(--muted);margin-bottom:1px}
+.qty-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.qty-num.warn{color:var(--amber)} .qty-num.out{color:var(--red)}
+.actions{display:flex;flex-direction:column;gap:5px}
+.sell-btn{height:32px;padding:0 12px;background:var(--red-l);color:var(--red);border:1.5px solid #F09595;border-radius:7px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .1s,transform .1s}
+.sell-btn:hover{background:#F7C1C1}
+.sell-btn:active{transform:scale(.95)}
+.sell-btn:disabled{opacity:.4;cursor:not-allowed}
+.restock-row{display:flex;gap:4px;align-items:center}
+.rst-input{width:46px;height:27px;border:1.5px solid var(--border);border-radius:6px;padding:0 5px;font-size:12px;text-align:center;font-family:'DM Sans',sans-serif;background:var(--card);color:var(--text);outline:none}
+.rst-input:focus{border-color:var(--purple-m)}
+.rst-btn{height:27px;padding:0 9px;background:var(--green-l);color:var(--green);border:1.5px solid #97C459;border-radius:6px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:3px;transition:background .1s}
+.rst-btn:hover{background:#C0DD97}
+
+/* QUICK SELL */
+.sell-panel{position:sticky;top:1.5rem}
+.sell-search{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rs);padding:0 11px;margin-bottom:12px;transition:border-color .15s}
+.sell-search:focus-within{border-color:var(--purple-m)}
+.sell-search input{flex:1;height:40px;border:none;background:transparent;font-size:14px;color:var(--text);outline:none;font-family:'DM Sans',sans-serif}
+.sell-list{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
+.sell-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg);cursor:pointer;transition:border-color .15s,background .15s;user-select:none;-webkit-tap-highlight-color:transparent}
+.sell-item:hover:not(.disabled){border-color:var(--purple-m);background:var(--purple-l)}
+.sell-item:active:not(.disabled){transform:scale(.98)}
+.sell-item.disabled{opacity:.4;cursor:not-allowed}
+.sell-sthumb{width:42px;height:42px;border-radius:9px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;display:block}
+.sell-sph{width:42px;height:42px;border-radius:9px;background:var(--purple-l);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sell-info{flex:1;min-width:0}
+.sell-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sell-sub{font-size:11px;color:var(--muted)}
+.sell-qbadge{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;min-width:28px;text-align:right}
+.sell-qbadge.ok{color:var(--green)} .sell-qbadge.warn{color:var(--amber)} .sell-qbadge.out{color:var(--red)}
+.sell-hint{text-align:center;font-size:11px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+
+/* LOG */
+.log-panel{margin-top:16px}
+.log-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.log-row:last-child{border-bottom:none}
+.log-left{display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot.sold{background:var(--red)} .dot.add{background:var(--teal)} .dot.rst{background:var(--purple)}
+.log-time{font-size:11px;color:var(--muted);flex-shrink:0;margin-left:8px}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:7px;z-index:999;pointer-events:none;max-width:280px}
+.toast{background:var(--text);color:#fff;padding:10px 16px;border-radius:var(--rs);font-size:13px;font-weight:500;display:flex;align-items:center;gap:7px;animation:toastIn .22s ease;box-shadow:0 6px 20px rgba(0,0,0,.18);pointer-events:auto;transition:opacity .3s;line-height:1.4}
+.toast.green{background:var(--green)} .toast.red{background:var(--red)} .toast.amber{background:var(--amber)}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* EMPTY */
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--muted)}
+.img-mini{width:32px;height:32px;border-radius:7px;object-fit:cover;border:1.5px solid var(--purple-m)}
+.clear-btn{width:18px;height:18px;border-radius:50%;background:var(--purple);color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+input[type=file]{display:none}
+::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:var(--purple-m);border-radius:4px}
+
+/* MOBILE BOTTOM NAV */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--purple-d);padding:8px 0 max(10px,env(safe-area-inset-bottom));z-index:100;border-top:1px solid rgba(255,255,255,.08)}
+.mobile-nav-inner{display:flex;justify-content:space-around}
+.mnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 14px;color:rgba(255,255,255,.55);font-size:10px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:'DM Sans',sans-serif;border-radius:8px;transition:color .15s;-webkit-tap-highlight-color:transparent}
+.mnav-item.active{color:#fff}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .panels{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .sell-panel{position:static}
+  .sell-list{max-height:none}
+}
+@media(max-width:640px){
+  .sidebar{display:none}
+  .mobile-nav{display:block}
+  .main{padding:1rem 0.85rem 80px}
+  .stats{grid-template-columns:repeat(2,1fr);gap:8px}
+  .stat-card{padding:12px 13px}
+  .stat-val{font-size:22px}
+  .form-grid{grid-template-columns:1fr 1fr}
+  .form-grid .fld:first-child{grid-column:1/-1}
+  .icard{grid-template-columns:46px 1fr auto;gap:9px}
+  .thumb,.thumb-ph{width:46px;height:46px}
+  .toast-wrap{bottom:80px;right:10px;left:10px;max-width:none}
+  .icard{
+  flex-direction:column !important;
+  align-items:flex-start !important;
+}
+
+.icard img{
+  width:65px !important;
+  height:65px !important;
+}
+
+.iright{
+  width:100%;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+
+button{
+  width:auto;
+}
+}
+@media(max-width:380px){
+  .iright{gap:6px}
+  .sell-btn{padding:0 8px;font-size:11px}
+  .qty-num{font-size:18px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR desktop -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="17"/><line x1="9.5" y1="14.5" x2="14.5" y2="14.5"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Stockr</div>
+        <div class="brand-tag">Inventory Manager</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        Inventory
+      <!-- </button>
+      <button class="nav-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Reports
+      </button> -->
+      <!-- <button class="nav-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Activity
+      </button> -->
+    </nav>
+    <div class="sidebar-footer">Stockr v1.0<br/>Your business, organized.</div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub" id="dlbl"></div>
+      </div>
+      <div class="date-pill">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="date-txt"></span>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-icon si-p">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        </div>
+        <div class="stat-val" id="st-items">0</div>
+        <div class="stat-lbl">Total items</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-t">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="stat-val" id="st-pieces">0</div>
+        <div class="stat-lbl">Pieces in stock</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-a">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BA7517" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="stat-val" id="st-low">0</div>
+        <div class="stat-lbl">Low / out of stock</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-r">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A32D2D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        </div>
+        <div class="stat-val" id="st-sold">0</div>
+        <div class="stat-lbl">Sold today</div>
+      </div>
+    </div>
+
+    <div class="panels">
+      <!-- LEFT COL -->
+      <div>
+        <!-- ADD FORM -->
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Add new item
+          </div>
+          <div class="form-grid">
+            <div class="fld"><label>Item name</label><input type="text" id="inp-name" placeholder="e.g. Blue Suit" /></div>
+            <div class="fld"><label>Price (₹)</label><input type="number" id="inp-price" placeholder="500" min="0" /></div>
+            <div class="fld"><label>Quantity</label><input type="number" id="inp-qty" placeholder="30" min="1" /></div>
+          </div>
+          <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+            <label class="upload-zone" for="swap-file">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span id="upl-txt">Upload photo (optional)</span>
+            </label>
+            <input type="file" id="swap-file" accept="image/*" />
+            <img 
+  id="img-preview"
+  style="
+    width:90px;
+    height:90px;
+    object-fit:cover;
+    border-radius:14px;
+    margin-top:10px;
+    display:none;
+    border:2px solid #ddd;
+  "
+/>
+            <div id="new-prev" style="display:none;align-items:center;gap:6px"></div>
+            <button class="btn-add" onclick="addItem()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Item
+            </button>
+          </div>
+        </div>
+
+        <!-- STOCK LIST -->
+        <div class="panel">
+          <div class="panel-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            Stock items
+          </div>
+          <div class="items-list" id="ilist"></div>
+        </div>
+
+        <!-- LOG -->
+        <div class="panel log-panel" id="log-panel" style="display:none;margin-top:16px">
+          <div class="panel-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Recent activity
+          </div>
+          <div id="log-rows"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT COL: QUICK SELL -->
+      <div class="sell-panel">
+        <div class="panel">
+          <div class="panel-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Quick sell
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:11px">Employee taps an item — stock subtracts instantly.</p>
+          <div class="sell-search">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6b6890" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="sell-search" placeholder="Search items…" oninput="renderSellList()" />
+          </div>
+          <div class="sell-list" id="sell-list"></div>
+          <div class="sell-hint">Tap any item to sell 1 piece instantly</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav" aria-label="Main navigation">
+  <div class="mobile-nav-inner">
+    <button class="mnav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Home
+    </button>
+    <button class="mnav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      Stock
+    </button>
+    <button class="mnav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Sell
+    </button>
+    <button class="mnav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Log
+    </button>
+  </div>
+</nav>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+<input type="file" id="swap-file" accept="image/*" />
+<img 
+  id="img-preview"
+  style="
+    width:90px;
+    height:90px;
+    object-fit:cover;
+    border-radius:14px;
+    margin-top:10px;
+    display:none;
+    border:2px solid #ddd;
+  "
+/>
+
+<script>
+  console.log('SCRIPT STARTED');
+let inv = [];
+let newImg = null;
+
+const API = 'http://localhost:5000/api/products';
+
+const now = new Date();
+
+const dateEl = document.getElementById('date-txt');
+if(dateEl){
+  dateEl.textContent = now.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+}
+
+const lblEl = document.getElementById('dlbl');
+if(lblEl){
+  lblEl.textContent =
+    'Good ' + (now.getHours() < 12 ? 'morning' : 'afternoon') +
+    ' — here is your stock overview.';
+}
+
+async function loadProducts() {
+
+  try {
+
+    const res = await fetch(API);
+    const data = await res.json();
+
+    inv = data.reverse().map(item => ({
+      id: item.id,
+      name: item.name,
+      price: Number(item.price),
+      qty: Number(item.quantity),
+      img: item.image || null,
+      soldToday: 0
+    }));
+
+    render();
+
+  } catch (err) {
+
+    console.error(err);
+    toast('Backend connection failed');
+
+  }
+}
+
+function render() {
+  renderStats();
+  renderItems();
+}
+function renderStats() {
+
+  const items = document.getElementById('st-items');
+  const pieces = document.getElementById('st-pieces');
+  const low = document.getElementById('st-low');
+  const sold = document.getElementById('st-sold');
+
+  if(items) items.textContent = inv.length;
+  if(pieces) pieces.textContent = inv.reduce((a,b)=>a+b.qty,0);
+  if(low) low.textContent = inv.filter(i=>i.qty<=3).length;
+  if(sold) sold.textContent = inv.reduce((a,b)=>a+b.soldToday,0);
+}
+
+function renderItems() {
+
+  const wrap = document.getElementById('ilist');
+
+  if(!wrap) return;
+
+  if(inv.length === 0){
+
+    wrap.innerHTML = `
+      <div class="empty">
+        <p>No items yet — add your first product above.</p>
+      </div>
+    `;
+
+    return;
+  }
+
+  wrap.innerHTML = inv.map(item => `
+
+    <div class="icard">
+
+     <div style="
+  display:flex;
+  align-items:center;
+  gap:18px;
+  width:100%;
+max-width:320px;
+">
+
+  ${item.img ? `
+    <img 
+      src="${item.img}" 
+      style="
+        width:80px;
+        height:80px;
+        object-fit:cover;
+        border-radius:16px;
+        border:2px solid #ddd;
+        flex-shrink:0;
+      "
+    >
+  ` : ''}
+
+  <div style="
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:8px;
+    min-width:0;
+    flex:1;
+  ">
+
+    <div style="
+      font-size:22px;
+      font-weight:700;
+      line-height:1.2;
+      word-break:break-word;
+    ">
+      ${item.name}
+    </div>
+
+    <div style="
+      font-size:18px;
+      opacity:.8;
+    ">
+      ₹${item.price}
+    </div>
+
+  </div>
+
+</div>
+
+  `).join('');
+}
+
+function renderItems() {
+
+  const wrap = document.getElementById('ilist');
+
+  if (!wrap) return;
+
+  if (inv.length === 0) {
+
+    wrap.innerHTML = `
+      <div class="empty">
+        <p>No items yet — add your first product above.</p>
+      </div>
+    `;
+
+    return;
+  }
+
+  wrap.innerHTML = inv.map(item => `
+
+    <div class="icard" style="
+      display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px;
+margin-bottom:14px;
+border:1px solid #ddd;
+border-radius:18px;
+gap:18px;
+flex-wrap:wrap;
+    ">
+
+      <div style="
+        display:flex;
+        align-items:center;
+        gap:18px;
+      ">
+
+        ${item.img ? `
+          <img 
+            src="${item.img}" 
+            style="
+              width:80px;
+              height:80px;
+              object-fit:cover;
+              border-radius:16px;
+              border:2px solid #ddd;
+            "
+          >
+        ` : ''}
+
+        <div>
+
+          <div style="
+            font-size:24px;
+            font-weight:700;
+            margin-bottom:6px;
+          ">
+            ${item.name}
+          </div>
+
+          <div style="
+            font-size:18px;
+            opacity:.8;
+          ">
+            ₹${item.price}
+          </div>
+
+        </div>
+
+      </div>
+
+      <div style="
+        display:flex;
+        align-items:center;
+        gap:20px;
+      ">
+
+        <div style="
+          text-align:center;
+        ">
+          <div style="
+            font-size:13px;
+            opacity:.7;
+          ">
+            left
+          </div>
+
+          <div style="
+            font-size:32px;
+            font-weight:800;
+          ">
+            ${item.qty}
+          </div>
+        </div>
+
+        <button 
+          onclick="sellItem(${item.id})"
+          style="
+            padding:12px 18px;
+            border:none;
+            border-radius:12px;
+            background:#ffdddd;
+            cursor:pointer;
+            font-weight:700;
+          "
+        >
+          Sell 1
+        </button>
+
+        <div style="
+          display:flex;
+          gap:8px;
+        ">
+
+          <input 
+            type="number" 
+            id="r-${item.id}" 
+            value="1"
+            style="
+              width:60px;
+              padding:10px;
+              border-radius:10px;
+              border:1px solid #ccc;
+            "
+          >
+
+          <button 
+            onclick="restockItem(${item.id})"
+            style="
+              padding:10px 16px;
+              border:none;
+              border-radius:10px;
+              background:#dfffcf;
+              cursor:pointer;
+              font-weight:700;
+            "
+          >
+            Add
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `).join('');
+}
+async function addItem(){
+
+  const name = document.getElementById('inp-name').value.trim();
+  const price = parseInt(document.getElementById('inp-price').value);
+  const qty = parseInt(document.getElementById('inp-qty').value);
+
+  if(!name || isNaN(price) || isNaN(qty)){
+    toast('Please fill all fields');
+    return;
+  }
+
+  try{
+
+    await fetch(API,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        name,
+        price,
+        quantity:qty,
+        image:newImg
+      })
+    });
+
+    document.getElementById('inp-name').value='';
+    document.getElementById('inp-price').value='';
+    document.getElementById('inp-qty').value='';
+
+    toast('Product added');
+
+    loadProducts();
+
+  }catch(err){
+
+    console.error(err);
+    toast('Failed to add product');
+
+  }
+}
+
+async function sellItem(id){
+
+  try{
+
+    await fetch(`${API}/sell/${id}`,{
+      method:'PUT'
+    });
+
+    toast('Product sold');
+
+    loadProducts();
+
+  }catch(err){
+
+    console.error(err);
+    toast('Sell failed');
+
+  }
+}
+
+async function restockItem(id){
+
+  const amount = parseInt(document.getElementById(`r-${id}`).value);
+
+  try{
+
+    await fetch(`${API}/restock/${id}`,{
+      method:'PUT',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({ amount })
+    });
+
+    toast('Restocked');
+
+    loadProducts();
+
+  }catch(err){
+
+    console.error(err);
+    toast('Restock failed');
+
+  }
+}
+
+function toast(msg){
+
+  const wrap = document.getElementById('toast-wrap');
+
+  if(!wrap){
+    alert(msg);
+    return;
+  }
+
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+
+  wrap.appendChild(el);
+
+  setTimeout(()=>{
+    el.remove();
+  },2000);
+}
+
+
+const fileInput = document.getElementById('swap-file');
+
+console.log(fileInput);
+
+if(fileInput){
+
+  fileInput.addEventListener('change', function(e){
+
+    console.log('CHANGE DETECTED');
+
+    const file = e.target.files[0];
+
+    if(!file){
+      console.log('NO FILE');
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(event){
+
+      console.log('IMAGE LOADED');
+
+      newImg = event.target.result;
+
+      const preview = document.getElementById('img-preview');
+
+      if(preview){
+
+        preview.src = newImg;
+        preview.style.display = 'block';
+
+      }
+
+      toast('Image selected');
+
+    };
+
+    reader.readAsDataURL(file);
+
+  });
+
+}
+
+loadProducts();
+console.log('SCRIPT ENDED');
+document.getElementById('swap-file').addEventListener('change', function(e){
+
+  const file = e.target.files[0];
+
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(event){
+
+    newImg = event.target.result;
+
+    const preview = document.getElementById('img-preview');
+
+    preview.src = newImg;
+    preview.style.display = 'block';
+
+    console.log('IMAGE WORKING');
+
+  };
+
+  reader.readAsDataURL(file);
+
+});
+loadProducts();
+
+function showTab(tab){
+
+  const dash = document.getElementById('dashboard-section');
+  const invsec = document.getElementById('inventory-section');
+  const rep = document.getElementById('reports-section');
+  const act = document.getElementById('activity-section');
+
+  if(dash) dash.style.display = 'none';
+  if(invsec) invsec.style.display = 'none';
+  if(rep) rep.style.display = 'none';
+  if(act) act.style.display = 'none';
+
+  if(tab === 'dashboard'){
+    if(dash) dash.style.display = 'grid';
+    if(invsec) invsec.style.display = 'block';
+  }
+
+  if(tab === 'inventory'){
+    if(invsec) invsec.style.display = 'block';
+  }
+
+  if(tab === 'reports'){
+
+    if(rep) rep.style.display = 'block';
+
+    document.getElementById('rep-value').textContent =
+      '₹' + inv.reduce((a,b)=>a+(b.price*b.qty),0);
+
+    document.getElementById('rep-products').textContent = inv.length;
+
+    document.getElementById('rep-low').textContent =
+      inv.filter(i=>i.qty<=3).length;
+  }
+
+  if(tab === 'activity'){
+
+    if(act) act.style.display = 'block';
+
+    const log = document.getElementById('activity-log');
+
+    log.innerHTML = inv.map(i => `
+      <div class="card" style="padding:14px;">
+        ${i.name} → ${i.qty} left
+      </div>
+    `).join('');
+  }
+}
+
+</script>
+
+
+<div id="reports-section" style="display:none;padding:20px;">
+  <div class="card">
+    <h2>Reports</h2>
+    <div style="display:grid;gap:16px;margin-top:20px;">
+      <div class="card"><h3>Total Inventory Value</h3><p id="rep-value">₹0</p></div>
+      <div class="card"><h3>Total Products</h3><p id="rep-products">0</p></div>
+      <div class="card"><h3>Low Stock Items</h3><p id="rep-low">0</p></div>
+    </div>
+  </div>
+</div>
+
+<div id="activity-section" style="display:none;padding:20px;">
+  <div class="card">
+    <h2>Recent Activity</h2>
+    <div id="activity-log" style="display:flex;flex-direction:column;gap:12px;margin-top:20px;"></div>
+  </div>
+</div>
+
+</body>
+</html>
